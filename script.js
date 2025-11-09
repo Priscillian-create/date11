@@ -582,10 +582,23 @@ const DataModule = {
     
     async saveExpense(expense) {
         try {
+            // Ensure we have a valid user ID
+            let userId = currentUser?.id;
+            
+            // If no valid user ID, use a default UUID or skip the field
+            if (!userId || userId === 'undefined') {
+                console.warn('No valid user ID found, using default');
+                userId = '00000000-0000-0000-0000-000000000000';
+            }
+            
             const expenseToSave = {
-                ...expense,
-                created_at: new Date().toISOString(),
-                created_by: currentUser.id
+                date: expense.date,
+                description: expense.description,
+                category: expense.category,
+                amount: expense.amount,
+                receipt: expense.receipt,
+                notes: expense.notes,
+                created_by: userId
             };
             
             if (isOnline) {
@@ -639,10 +652,23 @@ const DataModule = {
     
     async savePurchase(purchase) {
         try {
+            // Ensure we have a valid user ID
+            let userId = currentUser?.id;
+            
+            // If no valid user ID, use a default UUID or skip the field
+            if (!userId || userId === 'undefined') {
+                console.warn('No valid user ID found, using default');
+                userId = '00000000-0000-0000-0000-000000000000';
+            }
+            
             const purchaseToSave = {
-                ...purchase,
-                created_at: new Date().toISOString(),
-                created_by: currentUser.id
+                date: purchase.date,
+                supplier: purchase.supplier,
+                description: purchase.description,
+                amount: purchase.amount,
+                invoice: purchase.invoice,
+                notes: purchase.notes,
+                created_by: userId
             };
             
             if (isOnline) {
@@ -1460,6 +1486,15 @@ async function syncDeleteSale(operation) {
 
 async function syncExpense(operation) {
     try {
+        // Ensure we have a valid user ID
+        let userId = operation.data.created_by;
+        
+        // If no valid user ID, use a default UUID
+        if (!userId || userId === 'undefined') {
+            userId = '00000000-0000-0000-0000-000000000000';
+            operation.data.created_by = userId;
+        }
+        
         const { data, error } = await supabase
             .from('expenses')
             .insert(operation.data)
@@ -1485,6 +1520,15 @@ async function syncExpense(operation) {
 
 async function syncPurchase(operation) {
     try {
+        // Ensure we have a valid user ID
+        let userId = operation.data.created_by;
+        
+        // If no valid user ID, use a default UUID
+        if (!userId || userId === 'undefined') {
+            userId = '00000000-0000-0000-0000-000000000000';
+            operation.data.created_by = userId;
+        }
+        
         const { data, error } = await supabase
             .from('purchases')
             .insert(operation.data)
