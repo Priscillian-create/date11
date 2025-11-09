@@ -2088,10 +2088,6 @@ function showPage(pageName) {
     } else if (pageName === 'purchases') {
         loadPurchases();
     } else if (pageName === 'analytics') {
-        // Ensure analytics page is created before loading analytics
-        if (!document.getElementById('analytics-page')) {
-            createAnalyticsPage();
-        }
         loadAnalytics();
     }
 }
@@ -3105,181 +3101,8 @@ async function refreshAllData() {
     }
 }
 
-// New UI Functions for Expenses
-function showExpensesPage() {
-    const expensesPage = document.getElementById('expenses-page');
-    if (!expensesPage) {
-        createExpensesPage();
-    }
-    
-    showPage('expenses');
-    loadExpenses();
-}
-
-function createExpensesPage() {
-    const mainContent = document.querySelector('.main-content');
-    
-    const expensesPage = document.createElement('div');
-    expensesPage.id = 'expenses-page';
-    expensesPage.className = 'page-content';
-    
-    expensesPage.innerHTML = `
-        <div class="page-header">
-            <h2>Expense Management</h2>
-            <div class="page-actions">
-                <button id="add-expense-btn" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add Expense
-                </button>
-                <button id="refresh-expenses-btn" class="btn btn-secondary">
-                    <i class="fas fa-sync"></i> Refresh
-                </button>
-            </div>
-        </div>
-        
-        <div class="expense-summary">
-            <div class="summary-card">
-                <h3>Total Expenses (This Month)</h3>
-                <p id="monthly-expenses-total">${formatCurrency(0)}</p>
-            </div>
-            <div class="summary-card">
-                <h3>Total Expenses (This Year)</h3>
-                <p id="yearly-expenses-total">${formatCurrency(0)}</p>
-            </div>
-            <div class="summary-card">
-                <h3>Expense Categories</h3>
-                <div id="expense-categories-chart"></div>
-            </div>
-        </div>
-        
-        <div class="table-container">
-            <div class="table-header">
-                <h3>Recent Expenses</h3>
-                <div class="table-actions">
-                    <input type="text" id="expense-search" placeholder="Search expenses...">
-                    <select id="expense-filter-category">
-                        <option value="">All Categories</option>
-                    </select>
-                    <input type="date" id="expense-filter-date">
-                </div>
-            </div>
-            <div class="loading" id="expenses-loading" style="display: none;">
-                <i class="fas fa-spinner fa-spin"></i> Loading expenses...
-            </div>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>Category</th>
-                        <th>Amount</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="expenses-table-body">
-                    <tr>
-                        <td colspan="5" style="text-align: center;">No expenses data available</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    `;
-    
-    mainContent.appendChild(expensesPage);
-    
-    // Add event listeners
-    document.getElementById('add-expense-btn').addEventListener('click', openExpenseModal);
-    document.getElementById('refresh-expenses-btn').addEventListener('click', refreshExpenses);
-    document.getElementById('expense-search').addEventListener('input', filterExpenses);
-    document.getElementById('expense-filter-category').addEventListener('change', filterExpenses);
-    document.getElementById('expense-filter-date').addEventListener('change', filterExpenses);
-    
-    // Populate category filter
-    const categoryFilter = document.getElementById('expense-filter-category');
-    expenseCategories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        categoryFilter.appendChild(option);
-    });
-}
-
-// Create expense modal
-function createExpenseModal() {
-    const modal = document.createElement('div');
-    modal.id = 'expense-modal';
-    modal.className = 'modal';
-    
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="expense-modal-title">Add Expense</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="expense-form">
-                    <div class="form-group">
-                        <label for="expense-date">Date</label>
-                        <input type="date" id="expense-date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="expense-description">Description</label>
-                        <input type="text" id="expense-description" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="expense-category">Category</label>
-                        <select id="expense-category" required>
-                            <option value="">Select Category</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="expense-amount">Amount</label>
-                        <input type="number" id="expense-amount" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="expense-receipt">Receipt/Invoice #</label>
-                        <input type="text" id="expense-receipt">
-                    </div>
-                    <div class="form-group">
-                        <label for="expense-notes">Notes</label>
-                        <textarea id="expense-notes" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button id="save-expense-btn" class="btn btn-primary">Save Expense</button>
-                <button id="cancel-expense-btn" class="btn btn-secondary">Cancel</button>
-            </div>
-            <div class="modal-loading" id="expense-modal-loading" style="display: none;">
-                <i class="fas fa-spinner fa-spin"></i> Saving expense...
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Populate category dropdown
-    const categorySelect = document.getElementById('expense-category');
-    expenseCategories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        categorySelect.appendChild(option);
-    });
-    
-    // Add event listeners
-    document.querySelector('#expense-modal .modal-close').addEventListener('click', closeExpenseModal);
-    document.getElementById('cancel-expense-btn').addEventListener('click', closeExpenseModal);
-    document.getElementById('save-expense-btn').addEventListener('click', saveExpense);
-    
-    // Set default date to today
-    document.getElementById('expense-date').valueAsDate = new Date();
-}
-
+// Expense Functions
 function openExpenseModal(expense = null) {
-    if (!document.getElementById('expense-modal')) {
-        createExpenseModal();
-    }
-    
     const modalTitle = document.getElementById('expense-modal-title');
     const expenseForm = document.getElementById('expense-form');
     
@@ -3575,157 +3398,8 @@ async function refreshExpenses() {
     showNotification('Expenses refreshed', 'success');
 }
 
-// New UI Functions for Purchases
-function showPurchasesPage() {
-    const purchasesPage = document.getElementById('purchases-page');
-    if (!purchasesPage) {
-        createPurchasesPage();
-    }
-    
-    showPage('purchases');
-    loadPurchases();
-}
-
-function createPurchasesPage() {
-    const mainContent = document.querySelector('.main-content');
-    
-    const purchasesPage = document.createElement('div');
-    purchasesPage.id = 'purchases-page';
-    purchasesPage.className = 'page-content';
-    
-    purchasesPage.innerHTML = `
-        <div class="page-header">
-            <h2>Purchase Management</h2>
-            <div class="page-actions">
-                <button id="add-purchase-btn" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add Purchase
-                </button>
-                <button id="refresh-purchases-btn" class="btn btn-secondary">
-                    <i class="fas fa-sync"></i> Refresh
-                </button>
-            </div>
-        </div>
-        
-        <div class="purchase-summary">
-            <div class="summary-card">
-                <h3>Total Purchases (This Month)</h3>
-                <p id="monthly-purchases-total">${formatCurrency(0)}</p>
-            </div>
-            <div class="summary-card">
-                <h3>Total Purchases (This Year)</h3>
-                <p id="yearly-purchases-total">${formatCurrency(0)}</p>
-            </div>
-            <div class="summary-card">
-                <h3>Suppliers</h3>
-                <p id="total-suppliers">0</p>
-            </div>
-        </div>
-        
-        <div class="table-container">
-            <div class="table-header">
-                <h3>Recent Purchases</h3>
-                <div class="table-actions">
-                    <input type="text" id="purchase-search" placeholder="Search purchases...">
-                    <input type="date" id="purchase-filter-date">
-                </div>
-            </div>
-            <div class="loading" id="purchases-loading" style="display: none;">
-                <i class="fas fa-spinner fa-spin"></i> Loading purchases...
-            </div>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Supplier</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="purchases-table-body">
-                    <tr>
-                        <td colspan="5" style="text-align: center;">No purchases data available</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    `;
-    
-    mainContent.appendChild(purchasesPage);
-    
-    // Add event listeners
-    document.getElementById('add-purchase-btn').addEventListener('click', openPurchaseModal);
-    document.getElementById('refresh-purchases-btn').addEventListener('click', refreshPurchases);
-    document.getElementById('purchase-search').addEventListener('input', filterPurchases);
-    document.getElementById('purchase-filter-date').addEventListener('change', filterPurchases);
-}
-
-// Create purchase modal
-function createPurchaseModal() {
-    const modal = document.createElement('div');
-    modal.id = 'purchase-modal';
-    modal.className = 'modal';
-    
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="purchase-modal-title">Add Purchase</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="purchase-form">
-                    <div class="form-group">
-                        <label for="purchase-date">Date</label>
-                        <input type="date" id="purchase-date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="purchase-supplier">Supplier</label>
-                        <input type="text" id="purchase-supplier" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="purchase-description">Description</label>
-                        <input type="text" id="purchase-description" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="purchase-amount">Amount</label>
-                        <input type="number" id="purchase-amount" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="purchase-invoice">Invoice #</label>
-                        <input type="text" id="purchase-invoice">
-                    </div>
-                    <div class="form-group">
-                        <label for="purchase-notes">Notes</label>
-                        <textarea id="purchase-notes" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button id="save-purchase-btn" class="btn btn-primary">Save Purchase</button>
-                <button id="cancel-purchase-btn" class="btn btn-secondary">Cancel</button>
-            </div>
-            <div class="modal-loading" id="purchase-modal-loading" style="display: none;">
-                <i class="fas fa-spinner fa-spin"></i> Saving purchase...
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Add event listeners
-    document.querySelector('#purchase-modal .modal-close').addEventListener('click', closePurchaseModal);
-    document.getElementById('cancel-purchase-btn').addEventListener('click', closePurchaseModal);
-    document.getElementById('save-purchase-btn').addEventListener('click', savePurchase);
-    
-    // Set default date to today
-    document.getElementById('purchase-date').valueAsDate = new Date();
-}
-
+// Purchase Functions
 function openPurchaseModal(purchase = null) {
-    if (!document.getElementById('purchase-modal')) {
-        createPurchaseModal();
-    }
-    
     const modalTitle = document.getElementById('purchase-modal-title');
     const purchaseForm = document.getElementById('purchase-form');
     
@@ -3971,140 +3645,7 @@ async function refreshPurchases() {
     showNotification('Purchases refreshed', 'success');
 }
 
-// New UI Functions for Analytics
-function showAnalyticsPage() {
-    const analyticsPage = document.getElementById('analytics-page');
-    if (!analyticsPage) {
-        createAnalyticsPage();
-    }
-    
-    showPage('analytics');
-    loadAnalytics();
-}
-
-function createAnalyticsPage() {
-    const mainContent = document.querySelector('.main-content');
-    
-    const analyticsPage = document.createElement('div');
-    analyticsPage.id = 'analytics-page';
-    analyticsPage.className = 'page-content';
-    
-    analyticsPage.innerHTML = `
-        <div class="page-header">
-            <h2>Business Analytics</h2>
-            <div class="page-actions">
-                <select id="analytics-period">
-                    <option value="week">This Week</option>
-                    <option value="month" selected>This Month</option>
-                    <option value="quarter">This Quarter</option>
-                    <option value="year">This Year</option>
-                    <option value="custom">Custom Range</option>
-                </select>
-                <div id="custom-date-range" style="display: none;">
-                    <input type="date" id="analytics-start-date">
-                    <input type="date" id="analytics-end-date">
-                </div>
-                <button id="refresh-analytics-btn" class="btn btn-secondary">
-                    <i class="fas fa-sync"></i> Refresh
-                </button>
-            </div>
-        </div>
-        
-        <div class="analytics-summary">
-            <div class="summary-card">
-                <h3>Revenue</h3>
-                <p id="analytics-revenue">${formatCurrency(0)}</p>
-            </div>
-            <div class="summary-card">
-                <h3>Expenses</h3>
-                <p id="analytics-expenses">${formatCurrency(0)}</p>
-            </div>
-            <div class="summary-card">
-                <h3>Profit</h3>
-                <p id="analytics-profit">${formatCurrency(0)}</p>
-            </div>
-            <div class="summary-card">
-                <h3>Profit Margin</h3>
-                <p id="analytics-profit-margin">0%</p>
-            </div>
-        </div>
-        
-        <div class="analytics-charts">
-            <div class="chart-container">
-                <h3>Sales Trend</h3>
-                <div id="sales-trend-chart"></div>
-            </div>
-            <div class="chart-container">
-                <h3>Top Selling Products</h3>
-                <div id="top-products-chart"></div>
-            </div>
-        </div>
-        
-        <div class="analytics-alerts">
-            <h3>Stock Alerts</h3>
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="low-stock">Low Stock</button>
-                <button class="tab-btn" data-tab="expiring-soon">Expiring Soon</button>
-                <button class="tab-btn" data-tab="expired">Expired</button>
-                <button class="tab-btn" data-tab="discrepancies">Discrepancies</button>
-            </div>
-            <div class="tab-content">
-                <div id="low-stock-tab" class="tab-pane active">
-                    <div class="loading" id="low-stock-loading" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i> Checking stock levels...
-                    </div>
-                    <div id="low-stock-list">
-                        <p>No low stock products</p>
-                    </div>
-                </div>
-                <div id="expiring-soon-tab" class="tab-pane">
-                    <div class="loading" id="expiring-soon-loading" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i> Checking expiry dates...
-                    </div>
-                    <div id="expiring-soon-list">
-                        <p>No products expiring soon</p>
-                    </div>
-                </div>
-                <div id="expired-tab" class="tab-pane">
-                    <div class="loading" id="expired-loading" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i> Checking expired products...
-                    </div>
-                    <div id="expired-list">
-                        <p>No expired products</p>
-                    </div>
-                </div>
-                <div id="discrepancies-tab" class="tab-pane">
-                    <div class="loading" id="discrepancies-loading" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i> Checking for discrepancies...
-                    </div>
-                    <div id="discrepancies-list">
-                        <p>No discrepancies found</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    mainContent.appendChild(analyticsPage);
-    
-    // Add event listeners
-    document.getElementById('refresh-analytics-btn').addEventListener('click', refreshAnalytics);
-    document.getElementById('analytics-period').addEventListener('change', handleAnalyticsPeriodChange);
-    
-    // Tab switching
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tabName = btn.getAttribute('data-tab');
-            
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            document.getElementById(`${tabName}-tab`).classList.add('active');
-        });
-    });
-}
-
+// Analytics Functions
 async function loadAnalytics() {
     const loading = document.getElementById('analytics-loading');
     if (loading) loading.style.display = 'flex';
@@ -4159,12 +3700,8 @@ async function loadAnalytics() {
         // Create top products chart
         createTopProductsChart(startDate, endDate);
         
-        // Check if stock alert elements exist before loading stock alerts
-        if (document.getElementById('low-stock-list') && 
-            document.getElementById('expiring-soon-list') && 
-            document.getElementById('expired-list')) {
-            loadStockAlerts();
-        }
+        // Load stock alerts
+        loadStockAlerts();
         
         // Load discrepancies
         loadDiscrepancies();
@@ -4324,22 +3861,10 @@ function createTopProductsChart(startDate, endDate) {
 }
 
 function loadStockAlerts() {
-    const lowStockLoading = document.getElementById('low-stock-loading');
-    const lowStockList = document.getElementById('low-stock-list');
-    const expiringSoonLoading = document.getElementById('expiring-soon-loading');
-    const expiringSoonList = document.getElementById('expiring-soon-list');
-    const expiredLoading = document.getElementById('expired-loading');
-    const expiredList = document.getElementById('expired-list');
-    
-    // Check if the elements exist before proceeding
-    if (!lowStockList || !expiringSoonList || !expiredList) {
-        console.error('Stock alert elements not found in DOM');
-        return;
-    }
+    const lowStockLoading = document.getElementById('stock-alerts-loading');
+    const stockAlertsList = document.getElementById('stock-alerts-list');
     
     if (lowStockLoading) lowStockLoading.style.display = 'flex';
-    if (expiringSoonLoading) expiringSoonLoading.style.display = 'flex';
-    if (expiredLoading) expiredLoading.style.display = 'flex';
     
     try {
         const today = new Date();
@@ -4384,97 +3909,50 @@ function loadStockAlerts() {
             }
         });
         
-        // Display low stock products
-        if (lowStockProducts.length === 0) {
-            lowStockList.innerHTML = '<p>No low stock products</p>';
-        } else {
-            lowStockList.innerHTML = '';
-            
-            lowStockProducts.forEach(product => {
-                const productDiv = document.createElement('div');
-                productDiv.className = 'alert-item low_stock';
-                
-                productDiv.innerHTML = `
-                    <div class="alert-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="alert-content">
-                        <div class="alert-message">${product.message}</div>
-                    <div class="alert-time">Current stock: ${product.currentStock}</div>
-                    <div class="alert-actions">
-                        <button class="btn btn-sm btn-primary" onclick="restockProduct('${product.id}')">Restock</button>
-                        <button class="btn btn-sm btn-secondary" onclick="viewProduct('${product.id}')">View</button>
-                    </div>
-                </div>
-                `;
-                
-                lowStockList.appendChild(productDiv);
-            });
-        }
+        // Display all alerts
+        const allAlerts = [
+            ...lowStockProducts.map(p => ({...p, type: 'low_stock'})),
+            ...expiringSoonProducts.map(p => ({...p, type: 'expiry_warning'})),
+            ...expiredProducts.map(p => ({...p, type: 'expired'}))
+        ];
         
-        // Display expiring soon products
-        if (expiringSoonProducts.length === 0) {
-            expiringSoonList.innerHTML = '<p>No products expiring soon</p>';
+        if (allAlerts.length === 0) {
+            stockAlertsList.innerHTML = '<p>No stock alerts</p>';
         } else {
-            expiringSoonList.innerHTML = '';
+            stockAlertsList.innerHTML = '';
             
-            expiringSoonProducts.forEach(product => {
-                const productDiv = document.createElement('div');
-                productDiv.className = 'alert-item expiry_warning';
+            allAlerts.forEach(alert => {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert-item ${alert.type}`;
                 
-                productDiv.innerHTML = `
+                let iconClass = 'fas fa-exclamation-triangle';
+                if (alert.type === 'expired') {
+                    iconClass = 'fas fa-times-circle';
+                } else if (alert.type === 'expiry_warning') {
+                    iconClass = 'fas fa-clock';
+                }
+                
+                alertDiv.innerHTML = `
                     <div class="alert-icon">
-                        <i class="fas fa-clock"></i>
+                        <i class="${iconClass}"></i>
                     </div>
                     <div class="alert-content">
-                        <div class="alert-message">${product.message}</div>
-                        <div class="alert-time">Expires on: ${formatDate(product.expiryDate)}</div>
+                        <div class="alert-message">${alert.message}</div>
+                        <div class="alert-time">${alert.type === 'low_stock' ? `Current stock: ${alert.currentStock}` : `Expires on: ${formatDate(alert.expiryDate)}`}</div>
                         <div class="alert-actions">
-                            <button class="btn btn-sm btn-secondary" onclick="viewProduct('${product.id}')">View</button>
+                            <button class="btn btn-sm btn-secondary" onclick="viewProduct('${alert.id}')">View</button>
                         </div>
                     </div>
                 `;
                 
-                expiringSoonList.appendChild(productDiv);
-            });
-        }
-        
-        // Display expired products
-        if (expiredProducts.length === 0) {
-            expiredList.innerHTML = '<p>No expired products</p>';
-        } else {
-            expiredList.innerHTML = '';
-            
-            expiredProducts.forEach(product => {
-                const productDiv = document.createElement('div');
-                productDiv.className = 'alert-item expired';
-                
-                productDiv.innerHTML = `
-                    <div class="alert-icon">
-                        <i class="fas fa-times-circle"></i>
-                    </div>
-                    <div class="alert-content">
-                        <div class="alert-message">${product.message}</div>
-                        <div class="alert-time">Expired on: ${formatDate(product.expiryDate)}</div>
-                        <div class="alert-actions">
-                            <button class="btn btn-sm btn-danger" onclick="removeProduct('${product.id}')">Remove</button>
-                            <button class="btn btn-sm btn-secondary" onclick="viewProduct('${product.id}')">View</button>
-                        </div>
-                    </div>
-                `;
-                
-                expiredList.appendChild(productDiv);
+                stockAlertsList.appendChild(alertDiv);
             });
         }
     } catch (error) {
         console.error('Error loading stock alerts:', error);
-        if (lowStockList) lowStockList.innerHTML = '<p>Error loading stock alerts</p>';
-        if (expiringSoonList) expiringSoonList.innerHTML = '<p>Error loading expiry alerts</p>';
-        if (expiredList) expiredList.innerHTML = '<p>Error loading expired products</p>';
+        if (stockAlertsList) stockAlertsList.innerHTML = '<p>Error loading stock alerts</p>';
     } finally {
         if (lowStockLoading) lowStockLoading.style.display = 'none';
-        if (expiringSoonLoading) expiringSoonLoading.style.display = 'none';
-        if (expiredLoading) expiredLoading.style.display = 'none';
     }
 }
 
@@ -5008,6 +4486,45 @@ if (changePasswordForm) {
         }
     });
 }
+
+// Expense page event listeners
+document.getElementById('add-expense-btn').addEventListener('click', openExpenseModal);
+document.getElementById('refresh-expenses-btn').addEventListener('click', refreshExpenses);
+document.getElementById('expense-search').addEventListener('input', filterExpenses);
+document.getElementById('expense-filter-category').addEventListener('change', filterExpenses);
+document.getElementById('expense-filter-date').addEventListener('change', filterExpenses);
+
+// Purchase page event listeners
+document.getElementById('add-purchase-btn').addEventListener('click', openPurchaseModal);
+document.getElementById('refresh-purchases-btn').addEventListener('click', refreshPurchases);
+document.getElementById('purchase-search').addEventListener('input', filterPurchases);
+document.getElementById('purchase-filter-date').addEventListener('change', filterPurchases);
+
+// Analytics page event listeners
+document.getElementById('refresh-analytics-btn').addEventListener('click', refreshAnalytics);
+document.getElementById('analytics-period').addEventListener('change', handleAnalyticsPeriodChange);
+
+// Tab switching for analytics page
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tabName = btn.getAttribute('data-tab');
+        
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+        document.getElementById(`${tabName}-tab`).classList.add('active');
+    });
+});
+
+// Modal event listeners
+document.querySelector('#expense-modal .modal-close').addEventListener('click', closeExpenseModal);
+document.getElementById('cancel-expense-btn').addEventListener('click', closeExpenseModal);
+document.getElementById('save-expense-btn').addEventListener('click', saveExpense);
+
+document.querySelector('#purchase-modal .modal-close').addEventListener('click', closePurchaseModal);
+document.getElementById('cancel-purchase-btn').addEventListener('click', closePurchaseModal);
+document.getElementById('save-purchase-btn').addEventListener('click', savePurchase);
 
 // Initialize app
 async function init() {
